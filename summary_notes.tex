@@ -12,7 +12,7 @@
 \usepackage{graphicx}
 \usepackage{glossaries}
 %\usepackage{floats}
-%\graphicspath{{./pics/}}
+\graphicspath{pics}
 \usepackage{sectsty} % Allows customizing section commands
 
 \usepackage{fancyhdr} % Custom headers and footers
@@ -167,6 +167,7 @@ at runtime}}
 \newacronym{LDT}{LDT}{Local Description Table}
 \newacronym{PPN}{PPN}{Physical Page Number}
 \newacronym{TLS}{TLS}{Thread Level Storage}
+\newacronym{PAE}{PAE}{Physical Address Extension}
 %-------------------------------------------------------------------------------
 %	TITLE SECTION
 %-------------------------------------------------------------------------------
@@ -1084,14 +1085,11 @@ wok basically like gates in the execution of certain instructions. The purpose
 is to place restrictions on the type and scope of operations that can be 
 performed by certain processes.
 \subsubsection{32bit}
-The processor boots up in real address mode (the 8086 mode) for compatibility. 
-After that it reaches the protected mode where execution is carried out 
-according to the privileges established for the relevant execution ring. There 
-are 4 execution rings from 0 (kernel mode) to 3 (user mode). Applications run 
-with a paged 32-bit flat address space. There is another mode which is the 
+The processor boots up in \underline{real-address mode} (the 8086 mode) for compatibility. 
+After that it reaches the \underline{protected mode} where execution is carried out according to the privileges established for the relevant execution ring. There are 4 execution rings from 0 (kernel mode) to 3 (user mode). Applications run with a paged 32-bit flat address space. There is another mode which is the 
 system management mode intended for use by firmware only.
 \subsubsection{64bit}
-The 64bit CPUs can run in two submodes:
+The 64bit CPUs runs in IA32e, with two submodes:
 \begin{enumerate}
 	\item \textbf{Compatibility Mode} similar to the 32bit protected mode and 
 	permits legacy 32 and 16 bit applications to run without being recompiled. 
@@ -1100,14 +1098,27 @@ The 64bit CPUs can run in two submodes:
 	\item \textbf{64 bit Mode} allows to run 64 bit applications, extending 
 	general and SIMD registers from 8 to 16.
 \end{enumerate}
-\subsubsection{Memory Translation}
+\subsubsection{Paging and Memory Translation}
+Paging is the hardware implementation by which multiple programs can use the same full virtual address space without crashing. The translation process starts every time the CPU executes an instruction that refers to a memory address. The origin of this technique dates back to the 8086 that had 16-bit registers and its instructions used mostly 8 or 16 bit operands allowing the code to work with $2^{16}$ bytes (64K); yet CPU designers wanted to use more memory without expanding the size of the registers. This gave birth to the \underline{segment registers} which are a mean to tell the CPU which 64K long segment had to be used and the effective offset from the beginning of the segment itself. Originallythere were four registers:
+\begin{itemize}
+	\item[SS] used for the stack;
+	\item[CS] used for the code;
+	\item[DS/ES] used for data;
+\end{itemize}
 The CPU produces a logical address made of a 16bit Selector and the Offset; 
 these are given to the GDT that returns the Base and the Limit of the LDT along 
 with relevant flags. These are combined into the linear address which contains 
 the Page Directory, the Page Table and the Offset. By knowing the page 
 directory and the page table we can find the PPN and with the offset we 
 finally find the address in memory where data and instructions stand.
-MOdern OS's use paging only to provide a 32/64 bit virtual flat address space.
+Modern OS's use paging only to provide a 32/64 bit virtual flat address space.
+\begin{figure}
+	\begin{center}
+	\includegraphics[scale=0.5]{./pics/x86_translation.pdf}
+	\caption{Memory Translation}
+	\label{memtrans}
+\end{center}
+\end{figure}
 \subsubsection{Registers}
 In 32 bit mode the segment registers CS, DS, ES and SS hold 16 bit useless 
 segment selectors. In 64 bit CS, DS, ES, SS are all treated as if each segment 

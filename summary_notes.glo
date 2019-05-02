@@ -1,25 +1,26 @@
-\glossaryentry{Binary Analysis?\glossentry{BA}|setentrycounter[]{page}\glsnumberformat}{17}
-\glossaryentry{Static Analysis?\glossentry{SA}|setentrycounter[]{page}\glsnumberformat}{17}
-\glossaryentry{Dynamic Analysis?\glossentry{DA}|setentrycounter[]{page}\glsnumberformat}{17}
-\glossaryentry{OS?\glossentry{OS}|setentrycounter[]{page}\glsnumberformat}{17}
-\glossaryentry{API?\glossentry{API}|setentrycounter[]{page}\glsnumberformat}{17}
-\glossaryentry{ISA?\glossentry{ISA}|setentrycounter[]{page}\glsnumberformat}{17}
-\glossaryentry{FS?\glossentry{FS}|setentrycounter[]{page}\glsnumberformat}{17}
-\glossaryentry{I/O?\glossentry{IO}|setentrycounter[]{page}\glsnumberformat}{17}
-\glossaryentry{VM?\glossentry{VM}|setentrycounter[]{page}\glsnumberformat}{17}
-\glossaryentry{VMM?\glossentry{VMM}|setentrycounter[]{page}\glsnumberformat}{17}
-\glossaryentry{370-XA?\glossentry{370-XA}|setentrycounter[]{page}\glsnumberformat}{17}
-\glossaryentry{VMF?\glossentry{VMF}|setentrycounter[]{page}\glsnumberformat}{17}
-\glossaryentry{VMA?\glossentry{VMA}|setentrycounter[]{page}\glsnumberformat}{17}
-\glossaryentry{ECPS?\glossentry{ECPS}|setentrycounter[]{page}\glsnumberformat}{17}
-\glossaryentry{STB?\glossentry{STB}|setentrycounter[]{page}\glsnumberformat}{17}
-\glossaryentry{IA-32?\glossentry{IA-32}|setentrycounter[]{page}\glsnumberformat}{17}
-\glossaryentry{IA-64?\glossentry{IA-64}|setentrycounter[]{page}\glsnumberformat}{17}
-\glossaryentry{ABI?\glossentry{ABI}|setentrycounter[]{page}\glsnumberformat}{17}
-\glossaryentry{ELF?\glossentry{ELF}|setentrycounter[]{page}\glsnumberformat}{17}
-\glossaryentry{PE?\glossentry{PE}|setentrycounter[]{page}\glsnumberformat}{17}
-\glossaryentry{PLT?\glossentry{PLT}|setentrycounter[]{page}\glsnumberformat}{17}
-\glossaryentry{GDT?\glossentry{GDT}|setentrycounter[]{page}\glsnumberformat}{17}
-\glossaryentry{LDT?\glossentry{LDT}|setentrycounter[]{page}\glsnumberformat}{17}
-\glossaryentry{PPN?\glossentry{PPN}|setentrycounter[]{page}\glsnumberformat}{17}
-\glossaryentry{TLS?\glossentry{TLS}|setentrycounter[]{page}\glsnumberformat}{17}
+\glossaryentry{Binary Analysis?\glossentry{BA}|setentrycounter[]{page}\glsnumberformat}{19}
+\glossaryentry{Static Analysis?\glossentry{SA}|setentrycounter[]{page}\glsnumberformat}{19}
+\glossaryentry{Dynamic Analysis?\glossentry{DA}|setentrycounter[]{page}\glsnumberformat}{19}
+\glossaryentry{OS?\glossentry{OS}|setentrycounter[]{page}\glsnumberformat}{19}
+\glossaryentry{API?\glossentry{API}|setentrycounter[]{page}\glsnumberformat}{19}
+\glossaryentry{ISA?\glossentry{ISA}|setentrycounter[]{page}\glsnumberformat}{19}
+\glossaryentry{FS?\glossentry{FS}|setentrycounter[]{page}\glsnumberformat}{19}
+\glossaryentry{I/O?\glossentry{IO}|setentrycounter[]{page}\glsnumberformat}{19}
+\glossaryentry{VM?\glossentry{VM}|setentrycounter[]{page}\glsnumberformat}{19}
+\glossaryentry{VMM?\glossentry{VMM}|setentrycounter[]{page}\glsnumberformat}{19}
+\glossaryentry{370-XA?\glossentry{370-XA}|setentrycounter[]{page}\glsnumberformat}{19}
+\glossaryentry{VMF?\glossentry{VMF}|setentrycounter[]{page}\glsnumberformat}{19}
+\glossaryentry{VMA?\glossentry{VMA}|setentrycounter[]{page}\glsnumberformat}{19}
+\glossaryentry{ECPS?\glossentry{ECPS}|setentrycounter[]{page}\glsnumberformat}{19}
+\glossaryentry{STB?\glossentry{STB}|setentrycounter[]{page}\glsnumberformat}{19}
+\glossaryentry{IA-32?\glossentry{IA-32}|setentrycounter[]{page}\glsnumberformat}{19}
+\glossaryentry{IA-64?\glossentry{IA-64}|setentrycounter[]{page}\glsnumberformat}{19}
+\glossaryentry{ABI?\glossentry{ABI}|setentrycounter[]{page}\glsnumberformat}{19}
+\glossaryentry{ELF?\glossentry{ELF}|setentrycounter[]{page}\glsnumberformat}{19}
+\glossaryentry{PE?\glossentry{PE}|setentrycounter[]{page}\glsnumberformat}{19}
+\glossaryentry{PLT?\glossentry{PLT}|setentrycounter[]{page}\glsnumberformat}{19}
+\glossaryentry{GDT?\glossentry{GDT}|setentrycounter[]{page}\glsnumberformat}{19}
+\glossaryentry{LDT?\glossentry{LDT}|setentrycounter[]{page}\glsnumberformat}{19}
+\glossaryentry{PPN?\glossentry{PPN}|setentrycounter[]{page}\glsnumberformat}{19}
+\glossaryentry{TLS?\glossentry{TLS}|setentrycounter[]{page}\glsnumberformat}{19}
+\glossaryentry{PAE?\glossentry{PAE}|setentrycounter[]{page}\glsnumberformat}{19}
