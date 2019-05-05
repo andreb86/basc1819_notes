@@ -1,9 +1,7 @@
 %-------------------------------------------------------------------------------
 %	PACKAGES AND OTHER DOCUMENT CONFIGURATIONS
 %-------------------------------------------------------------------------------
-
 \documentclass[paper=a4, fontsize=11pt]{report} % A4 paper and 11pt font size
-
 \usepackage[T1]{fontenc} % Use 8-bit encoding that has 256 glyphs
 \usepackage{fourier} % Use the Adobe Utopia font for the document - comment 
 %this line to return to the LaTeX default
@@ -11,21 +9,19 @@
 \usepackage{amsmath,amsfonts,amsthm} % Math packages
 \usepackage{graphicx}
 \usepackage{glossaries}
+%\usepackage{tikz}
 %\usepackage{floats}
 \graphicspath{pics}
 \usepackage{sectsty} % Allows customizing section commands
-
 \usepackage{fancyhdr} % Custom headers and footers
 \usepackage{marvosym}
 %-------------------------------------------------------------------------------
 % Setup the listings package for the code excerpts
 \usepackage{listings}
 \usepackage{color}
-
 \definecolor{mygreen}{rgb}{0,0.6,0}
 \definecolor{mygray}{rgb}{0.5,0.5,0.5}
 \definecolor{mymauve}{rgb}{0.58,0,0.82}
-
 \lstset{ 
 	backgroundcolor=\color{white},   % choose the background color; you must 
 									 %add \usepackage{color} or 
@@ -75,7 +71,6 @@
 									 %\lstinputlisting; also try caption 
 									 %instead of title
 }
-
 \lstdefinestyle{ansic}{
 	belowcaptionskip=1\baselineskip,
 	frame=r,
@@ -85,7 +80,6 @@
 	keywordstyle=\color{blue}\ttfamily,
 	basicstyle=\footnotesize\ttfamily
 }
-
 \lstdefinestyle{asm}{
 	belowcaptionskip=1\baselineskip,
 	frame=r,
@@ -94,7 +88,6 @@
 	basicstyle=\footnotesize\ttfamily,
 	commentstyle=\itshape\color{red},
 }
-
 \lstdefinestyle{cmds}{
 	belowcaptionskip=1\baselineskip,
 	frame=l,
@@ -103,7 +96,6 @@
 	basicstyle=\footnotesize\ttfamily,
 	commentstyle=\itshape\color{red},
 }
-
 \lstdefinestyle{py}{
 	belowcaptionskip=1\baselineskip,
 	frame=l,
@@ -126,16 +118,13 @@
 \renewcommand{\footrulewidth}{0pt} % Remove footer underlines
 \setlength{\headheight}{13.6pt} % Customize the height of the header
 \usepackage[margin=3cm]{geometry}
-
 \numberwithin{equation}{section} % Number equations within sections (i.e. 1.1, 1.2, 2.1, 2.2 instead of 1, 2, 3, 4)
 \numberwithin{figure}{section} % Number figures within sections (i.e. 1.1, 1.2, 2.1, 2.2 instead of 1, 2, 3, 4)
 \numberwithin{table}{section} % Number tables within sections (i.e. 1.1, 1.2, 2.1, 2.2 instead of 1, 2, 3, 4)
-
 \setlength\parindent{0pt} % Removes all indentation from paragraphs - comment this line for an assignment with lots of text
 %-------------------------------------------------------------------------------
 % GLOSSARY AND ACRONYMS ENTRIES
 %-------------------------------------------------------------------------------
-
 \newglossaryentry{BA}{name={Binary Analysis},description={Analysis of binary 
 		computer programs, binaries in short, and the code within them to truly 
 		understand their actual behaviour as opposed to their intended 
@@ -144,7 +133,6 @@
 without running it}}
 \newglossaryentry{DA}{name={Dynamic Analysis},description={Analysis of a binary 
 at runtime}}
-
 \newacronym{OS}{OS}{Operating System}
 \newacronym{API}{API}{Application Programming Interface}
 \newacronym{ISA}{ISA}{Instruction Set Architecture}
@@ -171,9 +159,7 @@ at runtime}}
 %-------------------------------------------------------------------------------
 %	TITLE SECTION
 %-------------------------------------------------------------------------------
-
 \newcommand{\horrule}[1]{\rule{\linewidth}{#1}} % Create horizontal rule command with 1 argument of height
-
 % create new commands and environments for code excerpts
 \newcommand{\addr}[1]{{\fontfamily{pcr}\selectfont{0x00#1}}}
 \newcommand{\reg}[1]{{\fontfamily{pcr}\selectfont{#1}}}
@@ -185,7 +171,6 @@ at runtime}}
 \newcommand{\main}{{\fontfamily{pcr}\selectfont\textbf{main()}}}
 \newcommand{\func}[2]{{\fontfamily{pcr}\selectfont\textbf{#1(#2)}}}
 \renewcommand{\floatpagefraction}{.8}%
-
 \title{	
 \normalfont \normalsize 
 \textsc{University of Genova, DIBRIS} \\ [25pt]
@@ -193,13 +178,10 @@ at runtime}}
 \huge Binary Analysis and Secure Coding \\
 \horrule{2pt} \\[0.5cm] % Thick bottom horizontal rule
 }
-
 \author{Andrea Basso} % Your name
-
 \date{\normalsize\today} % Today's date or a custom date
 \makeglossaries
 \begin{document}
-
 \maketitle % Print the title
 \tableofcontents
 \chapter{Binary Analysis}
@@ -226,7 +208,6 @@ It can present several challenges as:
 	\item Code and data are mixed together;
 	\item Impossible to remove/add instructions without "bricking" the program.
 \end{itemize}
-
 \section{Execution}
 Unless one is programming the bare metal, programs are generally executed on an 
 Operating System (OS hereafter) which is an \textbf{abstract machine}.
@@ -248,7 +229,7 @@ multiple systems is beneficial for:
 	priority, memory demand, network and FS I/O can generate interference 
 	between programs.
 \end{itemize}
-However having multiple systems is not always the most fruitful and effective 
+However having multiple systems is not always the most fruitful and effective
 solution and in the 60's IBM started working on the first \textit{virtual 
 machines} where it was crucial to be able to time-share expensive main frames. 
 A VM is a fully isolated copy of the underlying hardware that enable 
@@ -285,7 +266,6 @@ requirement a computer architecture must have in order to be virtualisable is
 that privileged instructions must launch a trap and render control to the VMM 
 so it can decide whether the instruction can be executed or not. The three 
 essential characteristics of VM's are:
-
 \begin{enumerate}
 	\item Any program run under the VMM should exhibit an effect identical with 
 	that demonstrated if the program had run on the original machine (with the 
@@ -301,7 +281,7 @@ essential characteristics of VM's are:
 Full sytem virtualisation provides a virtual replica of the system's hardware 
 so that the OS's and software may run on the VM exactly as it would on "bare 
 metal".
-\paragraph{370-XA Virtualisation} The VM/370 is a VMM that was first delivered 
+\subsubsection{370-XA Virtualisation} The VM/370 is a VMM that was first delivered
 in the VMF/370 and ran the 370-XA, an architecture designed to maximise the 
 virtualisation performance. The platform provided \textit{"assists"} in the 
 architecture to boost the virtualisation performance of certain repetitive 
@@ -311,7 +291,7 @@ instructions on the hardware. Other assists supplanted the frequently executed
 instructions that still required VMM intervention and were enabled by setting 
 them in \textit{interpretive execution} mode. Assists included VMA, ECPS, STB 
 and many others (IBM developed more than 100 in total).
-\paragraph{IA-32} It was the most dominating architecture (now supplanted by 
+\subsubsection{IA-32} It was the most dominating architecture (now supplanted by
 x64) but it was never meant to be virtualised although that would have had 
 enormous benefits; the reason behind this resides in the fact that there is a 
 limited subset of instructions that does not need higher privilege to be run 
@@ -329,7 +309,7 @@ to the following
 	\item Sensitive, but not privileged instructions are detected and the VMM 
 	ensures they never get executed as they cannot be handled with a trap.
 \end{enumerate}
-\paragraph{IA-64} It presents more or less the same drawbacks of the IA-32, but 
+\subsubsection{IA-64} It presents more or less the same drawbacks of the IA-32, but
 it provides an important feature as it allows to run VM's in a higher ring of 
 the VMM and traps from the higher rings can be intercepted by lower rings.
 \subsubsection{Drawbacks of full system virtualisation}
@@ -343,7 +323,7 @@ to a physiscal one thanks to page table. Unused pages can be written to disk
 when inactive or when more memory is required. The VMM must intercept all of 
 the memory calls and translate VM space into the system's real space using 
 another pag table, retrieve the memory and return it to the VM.
-\subsection{Paravirtualisation} Paravirtualisation tries to mitigate the 
+\subsection{Paravirtualisation} Paravirtualisation tries to mitigate the
 performance hit by modifying the OS so that tasks are performed by the VMM 
 directly and not by the CPU. There are several commecrcial and open solutions 
 that can efficiently carry out paravirtualisation like:
@@ -353,7 +333,7 @@ that can efficiently carry out paravirtualisation like:
 	\item Denali
 	\item VMWare Sphere
 \end{itemize}
-The VMM provides the VM's with a software interface that is similar yet not 
+The VMM provides the VM's with a software interface that is similar yet not
 entirely identical to the underlying hardware. Paravirtualisation provides 
 specifically defined hooks by which it tries to minimise the number of 
 operations that must be carried out in the virtual environment. The guest OS 
@@ -385,7 +365,7 @@ It is a flexible format that can be used for:
 	\item dynamic libraries (*.so);
 	\item object files (also called relocatable files).
 \end{itemize}
-The ELF format is a sequence of headers, segments and sections containing the 
+The ELF format is a sequence of headers, segments and sections containing the
 necessary information and data for the execution and linkage of the executable.
 \subsubsection{File Header}
 The file header is located at the beginning of the file and is used to locate 
@@ -445,7 +425,7 @@ where:
 			{\ttfamily ET\_HIPROC} & 0xFFFF & Processor specific use\\ \hline
 		\end{tabular}
 	\end{center}
-	\item {\ttfamily e\_machine} identifies the architecture
+  \item {\ttfamily e\_machine} identifies the architecture
 	\item {\ttfamily e\_version} identifies the version of the current file 
 	format
 	\item {\ttfamily e\_entry} contains the virtual address of the entry point
@@ -555,9 +535,9 @@ where:
 			\hline
 		\end{tabular}
 	\end{center}
-	\item {\ttfamily sh\_flags} identifies the attributes of the section name 
+  \item {\ttfamily sh\_flags} identifies the attributes of the section name
 	as listed:
-	\begin{center}
+  \begin{center}
 		\begin{tabular}{|c|c|p{6cm}|}
 			\hline
 			\textbf{Name} & \textbf{Value} & \textbf{Meaning} \\ \hline
@@ -575,7 +555,7 @@ where:
 			\hline
 		\end{tabular}
 	\end{center}
-	\item {\ttfamily sh\_addr} contains the virtual address of the beginning of 
+  \item {\ttfamily sh\_addr} contains the virtual address of the beginning of 
 	the section in memory. If the section is not allocated in memory this shall 
 	be 0;
 	\item {\ttfamily sh\_offset} contains the offset of the section in bytes 
@@ -584,7 +564,7 @@ where:
 	{\ttfamily SHT\_NOBITS});
 	\item {\ttfamily sh\_link} contains the index of an associated section. 
 	This field is used for several purposes as detailed in the following:
-	\begin{center}
+  \begin{center}
 		\begin{tabular}{|c|c|}
 			\hline
 			\textbf{Type} & \textbf{Associated Section} \\ \hline
@@ -598,9 +578,9 @@ where:
 			in these sections\\ \hline
 		\end{tabular}
 	\end{center}
-	\item {\ttfamily sh\_info} contains extra info about the section as 
+  \item {\ttfamily sh\_info} contains extra info about the section as 
 	explained below:
-	\begin{center}
+  \begin{center}
 		\begin{tabular}{|c|c|}
 			\hline
 			\textbf{Type} & \textbf{Info} \\ \hline
@@ -615,7 +595,7 @@ where:
 	\item {\ttfamily sh\_entsize} contains the size in bytes, of each entry, 
 	for sections that contain fixed-size entries (zero otherwise).
 \end{itemize}
-The standard sections for Code/Data and other object file are reported in 
+The standard sections for Code/Data and other object file are reported in
 tables \ref{codedata} and \ref{objfile}.
 \begin{table}[!htbp]
 	\begin{center}
@@ -678,19 +658,16 @@ tables \ref{codedata} and \ref{objfile}.
 		\label{objfile}
 	\end{center}
 \end{table}
-
 \subsection{String Table}
 Contains the strings used for section and symbol names. It is an array of null 
 terminated strings. Section header table entries, and symbol table entries 
 refer to strings in a string table with an index relative to the beginning of 
 the string table. \textcolor{red}{The first byte of the table must be null so 
 that the index 0 always refers to a non-existent name.}
-
 \subsection{Symbol Table}
 The first symbol table entry is reserved and must be all zeroes ({\ttfamily 
 STN\_UNDEF} is useed as a reference to this entry).
 The structure of a symbol table entry is
-
 \begin{lstlisting}[style=ansic, caption={Symbol Table Entry}, label=shdr]
 	typedef  struct {
 		Elf64_Word sh_name;
@@ -701,7 +678,6 @@ The structure of a symbol table entry is
 		Elf64_Xword 	st_size;
 	} Elf64_Sym;
 \end{lstlisting}
-
 where:
 \begin{itemize}
 	\item {\ttfamily st\_name} contains the offset in bytes to the symbol name 
@@ -754,7 +730,7 @@ where:
 			\label{types}
 		\end{center}
 	\end{table}
-	\item {\ttfamily st\_other} is reserved for future use and must be 0;
+  \item {\ttfamily st\_other} is reserved for future use and must be 0;
 	\item {\ttfamily st\_shndx} contains the index of the section the index is 
 	defined into. For undefined symbols it is {\ttfamily SHN\_UNDEF}, for 
 	absolute symbols it is {\ttfamily SHN\_ABS} and for common ones is 
@@ -847,7 +823,7 @@ where:
 \begin{itemize}
 	\item {\ttfamily p\_type} indicates the type of the segment and can have 
 	the following values:
-	\begin{table}[!htbp]
+  \begin{table}[!htbp]
 		\begin{center}
 			\begin{tabular}{|c|c|c|}
 				\hline
@@ -873,7 +849,7 @@ where:
 			\label{segtypes}
 		\end{center}
 	\end{table}
-	The fields {\ttfamily PT\_LOAD}, {\ttfamily PT\_DYNAMIC} and {\ttfamily 
+	The fields {\ttfamily PT\_LOAD}, {\ttfamily PT\_DYNAMIC} and {\ttfamily
 	PT\_INTERP} are particularly important.
 	{\ttfamily PT\_LOAD} segments are intended to be loaded into memory when 
 	setting up the process. The size of the chunk at the address which it must 
@@ -887,7 +863,7 @@ where:
 	bits are reserved for processor specific use and the others are reserved 
 	for environment specific use.
 	The possible attributes can assume the values:
-	\begin{table}[!htbp]
+  \begin{table}[!htbp]
 		\begin{center}
 			\begin{tabular}{|c|c|c|}
 				\hline
@@ -943,7 +919,7 @@ Dynamically bound object files will have a {\ttfamily PT\_DYNAMIC} program
 header entry that refers to a segment contaaining the {\ttfamily .dynamic} 
 sextion. The content of the section is an array of {\ttfamily Elf64\_Dyn} 
 structures as per the listing below:
-\begin{lstlisting}[style=ansic, caption={Dynamic Table Structure}, 
+\begin{lstlisting}[style=ansic, caption={Dynamic Table Structure},
 label=elf64dyn]
 	typedef struct {
         Elf64_Sxword    d_tag;
@@ -1026,7 +1002,7 @@ array of initialisation functions\\ \hline
 array of termination functions\\ \hline
 \end{tabular} \caption{Dynamic Table Entries} \end{center}
 \end{table}
-	\item {\ttfamily d\_val} union member used to represent integer values;
+  \item {\ttfamily d\_val} union member used to represent integer values;
 	\item {\ttfamily d\_ptr} union member used to represent link-time virtual 
 	addresses that must be relocated to math the actual address at which the 
 	object file is loaded. The relocations must be done implicitly and tthere 
@@ -1044,7 +1020,7 @@ organised as:
 	\item {\ttfamily bucket[0]...bucket[nbucket - 1]}
 	\item {\ttfamily chain[0]...chain[nchain - 1]}
 \end{itemize}
-The {\ttfamily bucket} array forms the hash table itself. The number of entries 
+The {\ttfamily bucket} array forms the hash table itself. The number of entries
 in the hash table is given by the first word {\ttfamily nbucket}. The entries 
 in the {\ttfamily chain} reflect the symbol table. Entries of the symbol table 
 are organised in hash chains, one per bucket. The hash function is listed below.
@@ -1083,28 +1059,76 @@ i7 family with SSE4.2 and second generation VT.
 The operation modes, also called processor modes, CPU states or privilege level 
 wok basically like gates in the execution of certain instructions. The purpose 
 is to place restrictions on the type and scope of operations that can be 
-performed by certain processes.
-\subsubsection{32bit}
-The processor boots up in \underline{real-address mode} (the 8086 mode) for compatibility. 
-After that it reaches the \underline{protected mode} where execution is carried out according to the privileges established for the relevant execution ring. There are 4 execution rings from 0 (kernel mode) to 3 (user mode). Applications run with a paged 32-bit flat address space. There is another mode which is the 
-system management mode intended for use by firmware only.
-\subsubsection{64bit}
-The 64bit CPUs runs in IA32e, with two submodes:
+performed by certain processes. Memory translation starts
+every time the CPU executes an instruction that refers to a memory address. The
+origin of this technique dates back to the 8086 that had 16-bit registers and
+its instructions used mostly 8 or 16 bit operands allowing the code to work with
+$2^{16}$ bytes (64K); yet CPU designers wanted to use more memory without
+expanding the size of the registers. This gave birth to the \underline{segment
+registers} which are a mean to tell the CPU which 64K long segment had to be
+used and the effective offset from the beginning of the segment itself.
+\subsubsection{16bit}
+This is the operation mode of the 8086 and 8088 which are identical from a
+programming standpoint. They only support 1MB of memory and operate in
+\underline{real mode} which is unsafe as every program can access the entire
+memory including memory of other processes and programs. Memory segments cannot
+be larger than 64K. The 80286 introduced the 16bit protected mode and increased
+the available memory to 16MB.
+\paragraph{Real Address Mode}
+In real mode memory is limited to $2^{20}$ bytes (i.e. 1MB) with addresses 
+ranging from 00000 to FFFFF. These require a 20 bit number which of course does
+not work with the 16 bit limit of the 8086 registers. Intel solved the problem
+by using two 16-bit values instead of one for addressing:
 \begin{enumerate}
-	\item \textbf{Compatibility Mode} similar to the 32bit protected mode and 
-	permits legacy 32 and 16 bit applications to run without being recompiled. 
-	Allows access to $2^{36} = 64GB$ of physical memory using Physical Address 
-	Extensions;
-	\item \textbf{64 bit Mode} allows to run 64 bit applications, extending 
-	general and SIMD registers from 8 to 16.
+\item \textbf{The Selector} that provides the beginning of the memory segment;
+\item \textbf{The Offset} that is used to calculate the address from the
+  beeginning of the segment.
 \end{enumerate}
-\subsubsection{Paging and Memory Translation}
-Paging is the hardware implementation by which multiple programs can use the same full virtual address space without crashing. The translation process starts every time the CPU executes an instruction that refers to a memory address. The origin of this technique dates back to the 8086 that had 16-bit registers and its instructions used mostly 8 or 16 bit operands allowing the code to work with $2^{16}$ bytes (64K); yet CPU designers wanted to use more memory without expanding the size of the registers. This gave birth to the \underline{segment registers} which are a mean to tell the CPU which 64K long segment had to be used and the effective offset from the beginning of the segment itself. Originallythere were four registers:
+The address can be calculated according to the formula:
+\begin{equation}
+  address = 16 \cdot selector + offset
+\end{equation}
+Real address mode has disadvantages:
 \begin{itemize}
-	\item[SS] used for the stack;
-	\item[CS] used for the code;
-	\item[DS/ES] used for data;
+  \item A single selector can only reference 64K of memory and must be updated
+    if the code is larger than this upper bound;
+  \item Each byte in memory does not have a unique segmented address, but
+    multiple offsets from different selectors and comparison might be tricky.
 \end{itemize}
+\paragraph{16bit Protected Mode}
+In 286 protected mode, selector values are interpreted completely differently in
+real mode. The selector is an index into the LDT/GDT and virtual addresses are
+used in lieu of physical ones. The entries in the descriptor table contain the
+info relevant to their respective segment:
+\begin{enumerate}
+  \item Presence in memory of the segment;
+  \item Access permissions;
+  \item Location in memory.
+\end{enumerate}
+\begin{figure}
+	\begin{center}
+		\includegraphics[scale=0.5]{./pics/x86_translation.pdf}
+		\caption{Memory Translation}
+	\label{memtrans}
+	\end{center}
+\end{figure}
+\paragraph{Registers}
+The 8086 had four general purpose registers: AX, BX, CX and DX; each of them can be split into two 8bits - i.e. *H and *L -  containing the higher and lower halves of the registers respectively; trivially changing the value of an entire register changes the values of its halves and vice versa. The SI and DI registers can be used very much like their general purpose counterparts, but they cannot be decomposed. The BP and SP are respectively the base and stack pointers. The segment registers are:
+\begin{itemize}
+	\item[CS] Code Segment;
+	\item[DS] Data Segment;
+	\item[SS] Stack Segment;
+	\item[ES] Extra Segment used as a temporary register. 
+\end{itemize}
+The IP is the instruction pointer and holds the value of the next nstruction to be executed. The FLAGS instead is a collection of bits that contains information related to the result of the last executed instruction.
+\subsubsection{32bit}
+The processor boots up in \underline{real-address mode} (the 8086 mode) for
+compatibility. After that it reaches the \underline{32bit protected mode} where
+execution is carried out according to the privileges established for the
+relevant execution ring. There is another mode which is the system management
+mode intended for use by firmware only. Applications run with a paged 32-bit
+flat address space having a maximum size of 4GB (as well as 4GB segments).
+\paragraph{32bit Protected Mode}
 The CPU produces a logical address made of a 16bit Selector and the Offset; 
 these are given to the GDT that returns the Base and the Limit of the LDT along 
 with relevant flags. These are combined into the linear address which contains 
@@ -1112,40 +1136,55 @@ the Page Directory, the Page Table and the Offset. By knowing the page
 directory and the page table we can find the PPN and with the offset we 
 finally find the address in memory where data and instructions stand.
 Modern OS's use paging only to provide a 32/64 bit virtual flat address space.
-\begin{figure}
-	\begin{center}
-	\includegraphics[scale=0.5]{./pics/x86_translation.pdf}
-	\caption{Memory Translation}
-	\label{memtrans}
-\end{center}
-\end{figure}
-\subsubsection{Registers}
-In 32 bit mode the segment registers CS, DS, ES and SS hold 16 bit useless 
-segment selectors. In 64 bit CS, DS, ES, SS are all treated as if each segment 
-base is 0 and all limit checks are disabled. FS and GS point to the TLS for 64 
-and 32 bits respectively. Registers are divided in:
+32bit address space is divided in segments like the 16bit memory, but segments are divided into \textit{pages} which can be loaded separately.
+\paragraph{Registers}
+The registers are extended to 32 bits from 16 (hence the use of the E prefix in the name of the registers); they still are general purpose registers although their legacy definition was:
 \begin{itemize}
-	\item General Purpose
-	\subitem RAX/EAX, Accumulator;
-	\subitem RBX/EBX, Pointer to Data;
-	\subitem RCX/ECX, Counter;
-	\subitem RDX/EDX, I/O Pointer;
-	\subitem RSI/ESI, Source pointer for string operations;
-	\subitem RDI/EDI, Destination pointer;
-	\subitem R8-R15, Only for 64 bit;
-	\item Execution
-	\subitem RIP/EIP, Instruction pointer;
-	\subitem RSP/ESP, Stack pointer;
-	\subitem RBP/EBP, Base pointer;
-	\subitem RFLAGS/EFLAGS Carry, sign, zero, parity, ...
+	\item[EAX] Accumulator;
+	\item[EBX] Data Pointer;
+	\item[ECX] Counter;
+	\item[EDX] I/O Pointer;
+	\item[ESI] Source Pointer for strings;
+	\item[EDI] Destination Pointer.
 \end{itemize}
-\newpage
-The instructions can act on zero or more operands and data can be located:
+The other registers instead still maintain specific roles:
 \begin{itemize}
-	\item The instruction itself in case of an immediate operand;
-	\item a register
-	\item a memory location
-	\item an I/O port
+	\item[EIP] Instruction Pointer;
+	\item[ESP] Stack Pointer;
+	\item[EBP] Base Pointer;
+	\item[EFLAGS] like FLAGS.
+\end{itemize}
+The only registers which are not extended are the segment registers;(ncluding the FS and GS new temporary segments).
+\subsubsection{64bit}
+The 64bit CPUs runs in IA32e, with two submodes:
+\begin{enumerate}
+  \item \textbf{Compatibility Mode} similar to the 32bit protected mode and 
+	  permits legacy 32 and 16 bit applications to run without being recompiled. 
+	  Allows access to $2^{36} = 64GB$ of physical memory using Physical Address 
+	  Extensions;
+  \item \textbf{64 bit Mode} allows to run 64 bit applications, extending 
+	  general and SIMD registers from 8 to 16.
+\end{enumerate}
+\paragraph{Registers}
+Registers are extended again and they gain the prefix R* with similar scope, but with the following rules:
+\begin{enumerate}
+	\item 64bit operands produce 64bit results;
+	\item 32bit operands produce 32bits results with 0 extension of the upper 						part of the register;
+	\item \textcolor{red}{Word and half word operands do not change the upper 						part of the register.}
+\end{enumerate}
+\subsection{Operands}
+Machine code instructions have a varying number and type of operands; however single instructions will have a fixed number of operands. They can be:
+\begin{itemize}
+	\item an immediate listed into the instruction itself (hence in the code 							segment);
+	\item a register;
+	\item a memory location (which might be hardcoded into the instruction or 						computed by means of the values in the registers);
+	\item implied when thy are not explicitly shown;
+	\item an I/O port.
+\end{itemize}
+\subsection{Instruction Format}
+They are bytes strings from one to fiften bytes consisting of the following:
+\begin{itemize}
+	\item Optional Prefixes: 
 \end{itemize}
 \glsaddall
 \printglossaries
