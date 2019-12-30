@@ -4,3 +4,5 @@
 *.glsdefs
 *.ist
 *.toc
+*.gz
+*.pdf

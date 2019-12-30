@@ -621,20 +621,63 @@ This section outlines the detail of the execution of a binary from data represen
 \subsection{Data Representation}
 In binary analysis, for x86, data are normally represented in \textit{words} which are 32 bit wide objects; this concept
 is weakly used for x86\_64.
-\begin{table}[htbp]
-    \begin{center}
-    \begin{tabular}[|c|c|]
-    \begin{figure}
+\begin{figure}[!h]
+    \centering
+    \begin{minipage}[t]{4cm}
+        \centering
         \includegraphics[scale=0.4]{./pics/i386_data.png}
-        \caption{32bit data representation}
-        \label{32bit_word}
-    \end{figure}
-        &
-    \begin{figure}
+        \caption{32 bit}
+    \end{minipage}
+    \hspace{5cm}
+    \begin{minipage}[t]{4cm}
+        \centering
         \includegraphics[scale=0.4]{./pics/amd64_data.png}
-        \caption{64bit data representation}
-        \label{amd64_data}
-    \end{figure}
-    \end{tabular}
-    \end{center}
-\end{table}
+        \caption{64 bit}
+    \end{minipage}
+\end{figure}
+
+\subsection{Memory Layout and Function Calls}
+
+\subsubsection{32 bit}
+In 32 bit binaries the stack is alway word-aligned; argument words are pushed onto the stack in reverse order according
+to the \textit{C Calling} convention. EBP, EBX, EDI, ESI and ESP are preserved for the caller. Results are normally
+stored in EAX (for integral and pointer return values). EBX is the GOT base register and EFLAGS must be 0 upon entry and
+exit.
+When a function is called the relevant stack frame is laid out from the higher to the lower addresses with the 
+following order:
+\begin{enumerate}
+    \item From [{\ttfamily EBP + 8}] and above it is possible to find the function arguments pushed onto the previous
+        frame;
+    \item At [{\ttfamily EBP + 4}] it is possible to find the return address of the function;
+    \item {\ttfamily EBP} contains the value of the previous base pointer (optional);
+    \item from here below the local variables are pushed along with the instructions of the functions.
+\end{enumerate}
+When the binary is loaded the full stack layout is:
+\begin{itemize}
+    \item NULL
+    \item Program Name
+    \item Environment Strings
+    \item {\ttfamily argv} strings
+    \item ELF auxiliary table
+    \item NULL to terminate {\ttfamily envp[]}
+    \item Environment Pointers (at address $\beta$)
+    \item NULL to terminate {\ttfamily argv[]}
+    \item {\ttfamily argv} pointers (at address $\alpha$)
+    \item {\ttfamily argc}
+\end{itemize}
+The system calls (syscalls hereafter) in a 32 bit environment are executed by placing the index of the syscall in
+EAX whilst the other GPR's (EBX, ECX, EDX, ESI, EDI and EBP) contain the parameters of the syscall; finally
+the system call is invoked by issuing {\ttfamily INT 0x80}.
+As of today there are techniques allowing for faster syscalls by means of {\ttfamily sysenter} and {\ttfamily sysexit};
+in the {\ttfamily sysenter} user programs are intended to invoke a function called {\ttfamily \_\_kernel\_vsyscall}
+which is implemented in the kernel, but mapped into the vDSO of each process (this allows programs to execute kernel
+code in userland).
+
+\subsubsection{64 bit}
+The standard stack frame in this case resemble the one already seen for 32 bit executables with the obvious differences
+related to the larger size of the address space; the return address is stored at [{\ttfamily RBP + 8}]. 64 bit binaries
+also show significant differences in function calls.
+In particular the first six arguments of a function are passed inside the registers ({\ttfamily RDI}, {\ttfamily RSI},
+{\ttfamily RDX}, {\ttfamily RCX}, {\ttfamily R8} and {\ttfamily R9}) while the rest is pushed onto the stack. The return
+value may be contained in {\ttfamily RAX} as well as {\ttfamily RDX} based on the type. {\ttfamily RBP}, {\ttfamily
+RBX}, {\ttfamily R12-15} and {\ttfamily RSP} must be preserved for the caller.
