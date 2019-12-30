@@ -1,0 +1,6 @@
+*.aux
+*.log
+*.glo
+*.glsdefs
+*.ist
+*.toc
