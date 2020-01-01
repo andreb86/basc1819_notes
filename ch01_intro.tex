@@ -616,35 +616,48 @@ They are bytes strings from one to fiften bytes consisting of the following:
 \end{itemize}
 
 \section{Execution}
-This section outlines the detail of the execution of a binary from data representation to function and system calls.
-
+When a file is executed the calling process (e.g bash) uses {\ttfamily fork} and {\ttfamily execve} which creates a new
+virtual address space and populates it with the command line arguments and environment. If the file is an ELF the kernel
+loads {\ttfamily PT\_LOAD} segments and the interpreter, if requested, via {\ttfamily PT\_INTERP}.
 \subsection{Data Representation}
 In binary analysis, for x86, data are normally represented in \textit{words} which are 32 bit wide objects; this concept
 is weakly used for x86\_64.
-\begin{figure}[!h]
+\begin{figure}[!htbp]
     \centering
     \begin{minipage}[t]{4cm}
         \centering
-        \includegraphics[scale=0.4]{./pics/i386_data.png}
+        \includegraphics[scale=0.35]{./pics/i386_data.png}
         \caption{32 bit}
     \end{minipage}
-    \hspace{5cm}
+    \hspace{4cm}
     \begin{minipage}[t]{4cm}
         \centering
-        \includegraphics[scale=0.4]{./pics/amd64_data.png}
+        \includegraphics[scale=0.35]{./pics/amd64_data.png}
         \caption{64 bit}
     \end{minipage}
 \end{figure}
 
 \subsection{Memory Layout and Function Calls}
-
+Executables are mapped into memory segments when executed and in particular:
+\begin{itemize}
+    \item {\ttfamily text} segment that contains machine code instructions. It is a read only {\ttfamily r--} area and
+        can be shared with other processes;
+    \item {\ttfamily stack} segment which is a data structure that dynamically grows and shrinks as required;
+    \item {\ttfamily data} segment which contains:
+        \subitem \textbf{initialised data} initialised global and static variables with values read from the executable;
+        \subitem \textbf{uninitialised data (BSS)} uninitialised global and static variables with their sizes read from
+        the executables frames;
+        \subitem \textbf{heap} area for memory dynamic allocations. The top end of the heap is called the
+        \textit{program break}
+    \item ...;
+\end{itemize}
 \subsubsection{32 bit}
+\paragraph{Stack}
 In 32 bit binaries the stack is alway word-aligned; argument words are pushed onto the stack in reverse order according
-to the \textit{C Calling} convention. EBP, EBX, EDI, ESI and ESP are preserved for the caller. Results are normally
-stored in EAX (for integral and pointer return values). EBX is the GOT base register and EFLAGS must be 0 upon entry and
-exit.
-When a function is called the relevant stack frame is laid out from the higher to the lower addresses with the 
-following order:
+to the \textit{C Calling} convention. {\ttfamily EBP}, {\ttfamily EBX}, {\ttfamily EDI}, {\ttfamily ESI} and {\ttfamily
+ESP} are preserved for the caller. Results are normally stored in {\ttfamily EAX} (for integral and pointer return values).
+{\ttfamily EBX} is the GOT base register and {\ttfamily EFLAGS} must be 0 upon entry and exit. When a function is
+called the relevant stack frame is laid out from the higher to the lower addresses with the following order:
 \begin{enumerate}
     \item From [{\ttfamily EBP + 8}] and above it is possible to find the function arguments pushed onto the previous
         frame;
@@ -665,6 +678,7 @@ When the binary is loaded the full stack layout is:
     \item {\ttfamily argv} pointers (at address $\alpha$)
     \item {\ttfamily argc}
 \end{itemize}
+\paragraph{{\ttfamily syscalls}}
 The system calls (syscalls hereafter) in a 32 bit environment are executed by placing the index of the syscall in
 EAX whilst the other GPR's (EBX, ECX, EDX, ESI, EDI and EBP) contain the parameters of the syscall; finally
 the system call is invoked by issuing {\ttfamily INT 0x80}.
@@ -674,10 +688,10 @@ which is implemented in the kernel, but mapped into the vDSO of each process (th
 code in userland).
 
 \subsubsection{64 bit}
-The standard stack frame in this case resemble the one already seen for 32 bit executables with the obvious differences
+The standard stack frame in this case resembles the one already seen for 32 bit executables with the obvious differences
 related to the larger size of the address space; the return address is stored at [{\ttfamily RBP + 8}]. 64 bit binaries
 also show significant differences in function calls.
 In particular the first six arguments of a function are passed inside the registers ({\ttfamily RDI}, {\ttfamily RSI},
 {\ttfamily RDX}, {\ttfamily RCX}, {\ttfamily R8} and {\ttfamily R9}) while the rest is pushed onto the stack. The return
 value may be contained in {\ttfamily RAX} as well as {\ttfamily RDX} based on the type. {\ttfamily RBP}, {\ttfamily
-RBX}, {\ttfamily R12-15} and {\ttfamily RSP} must be preserved for the caller.
+RBX}, {\ttfamily R12-15} and {\ttfamily RSP} must be preserved for the caller. 
