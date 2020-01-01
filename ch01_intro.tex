@@ -618,7 +618,10 @@ They are bytes strings from one to fiften bytes consisting of the following:
 \section{Execution}
 When a file is executed the calling process (e.g bash) uses {\ttfamily fork} and {\ttfamily execve} which creates a new
 virtual address space and populates it with the command line arguments and environment. If the file is an ELF the kernel
-loads {\ttfamily PT\_LOAD} segments and the interpreter, if requested, via {\ttfamily PT\_INTERP}.
+loads {\ttfamily PT\_LOAD} segments and the interpreter, if requested, via {\ttfamily PT\_INTERP}. Linux supports
+different binary formats each dealt with by a specific handler (some come with the kernel and others can be loadable
+modules). Whenever a file is executed the first 128 bytes are passed on to every handler that can decide whether accept
+the executable.
 \subsection{Data Representation}
 In binary analysis, for x86, data are normally represented in \textit{words} which are 32 bit wide objects; this concept
 is weakly used for x86\_64.
@@ -649,11 +652,40 @@ Executables are mapped into memory segments when executed and in particular:
         the executables frames;
         \subitem \textbf{heap} area for memory dynamic allocations. The top end of the heap is called the
         \textit{program break}
-    \item ...;
+    \item Additional areas (page at 0, the kernel, System V shared memory, memory mapped regions, thread stacks and
+        dynamic libraries);
 \end{itemize}
+The range of virtual addresses (page and page entries) can vary over time due to:
+\begin{itemize}
+    \item stack growth;
+    \item allocation/deallocation of heap memory ({\ttfamily brk, sbrk, malloc} move the program break - i.e. change the
+        size of the data segment);
+    \item attachment/detachment of System V shared memory regions (with {\ttfamily shmat} and {\ttfamily shmdt});
+    \item mapping/unmapping of memory.
+\end{itemize}
+
+Memory mappings created with {\ttfamily mmap} can be of two types:
+\begin{itemize}
+    \item file mapping (also known as file-based mapping or memory-mapped files);
+    \item anonymous mapping of pages initialised to 0 (same as mapping with /dev/zero)
+\end{itemize}
+Pages can be shared (at potentially different addresses) across processes:
+\begin{itemize}
+    \item when they map the same region of a file;
+    \item when a child process inherits its' parent's mapping;
+\end{itemize}
+Shared mappings can be seen by different processes depending on whether the mapèing is declared as private or shared
+({\ttfamily MAP\_PRIVATE, MAP\_SHARED}); in the first case changes are not propagated and CoW is used instead.
+Mappings are lost with {\ttfamily exec}, but are inherited from children ({\ttfamily fork}) and without a call to
+{\ttfamily msynch} there is no guarantee that changes are written to a file before the execution of {\ttfamily munmap}.
+Memory protection and access rights ({\ttfamily PROT\_WRITE, PROT\_READ, PROT\_EXEC}) are set at the creation of the
+mapping and can be changed with {\ttfamily mprotect}. Process mappings are accessible in Linux at {\ttfamily
+/proc/\textit{pid}/map} and {\ttfamily /proc/\textit{pid}/smap}. The use of ASLR randomises the memory layout by
+calculating a random offset to be added at the return value of each {\ttfamily mmap} call; this causes most of the
+process memory 
 \subsubsection{32 bit}
 \paragraph{Stack}
-In 32 bit binaries the stack is alway word-aligned; argument words are pushed onto the stack in reverse order according
+In 32 bit binaries the stack is always word-aligned; argument words are pushed onto the stack in reverse order according
 to the \textit{C Calling} convention. {\ttfamily EBP}, {\ttfamily EBX}, {\ttfamily EDI}, {\ttfamily ESI} and {\ttfamily
 ESP} are preserved for the caller. Results are normally stored in {\ttfamily EAX} (for integral and pointer return values).
 {\ttfamily EBX} is the GOT base register and {\ttfamily EFLAGS} must be 0 upon entry and exit. When a function is
