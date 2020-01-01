@@ -65,11 +65,10 @@ After stopping execution, this can be resumed by calling the {\ttfamily PTRACE\_
 interpreted as the number of the signal to be delivered to the tracee.
 The calls to {\ttfamily PTRACE\_SYSCALL} and {\ttfamily PTRACE\_SINGLESTEP} respectively stop the tracee with a
 {\ttfamily SIGTRAP} at the entry/exit of a system call or at the execution of the next instruction.
-The calls to {\ttfamily PTRACE\_SYSEMU} and {\ttfamily PTRACE\_SYSEMU\_SINGLESTEP} continue to stop on entry of a system
-call or the next instruction for the latter.
+The calls to {\ttfamily PTRACE\_SYSEMU} and {\ttfamily PTRACE\_SYSEMU\_SINGLESTEP} continue to stop on entry of a system call or the next instruction for the latter.
 {\ttfamily PTRACE\_PEEKTEXT} and {\ttfamily PTRACE\_PEEKDATA} read a word at a specific address of the tracee's memory
-(these two are equivalent requests under linux as there is no segregation between text and data).
-{\ttfamily PTRACE\_PEEKUSER} allows for the investigation of the tracee's user area.
+(these two are equivalent requests under linux as there is no segregation between text and data). {\ttfamily
+PTRACE\_PEEKUSER} allows for the investigation of the tracee's user area.
 The {\ttfamily PTRACE\_GETREGS}, {\ttfamily PTRACE\_GETFPREGS} and {\ttfamily PTRACE\_GETREGSET} can copy, respectively,
 the general purpose registers, the floating point registers or the vector registers to a specific address.
 
@@ -87,9 +86,9 @@ with {\ttfamily --x} permissions).
 When a breakpoint is found at address $\alpha$ the execution is arrested with the instruction {\ttfamily INT3 [0xCC]}
 which launches a {\ttfamily SIGTRAP} intercepted by the debugger tracing the execution. {\ttfamily PTRACE\_PEEKTEXT} is
 used to save the content of address $\alpha$ and the instruction is here replaced with {\ttfamily INT3} by means of
-{PTRACE\_POKETEXT}. The instructions {\ttfamily PTRACE\_CONT} and {\ttfamily wait/waitpid} are used for the next
-{\ttfamily SIGTRAP}. The instructions {\ttfamily PTRACE\_GETREG/PTRACE\_SETREG} are used to inspect the program
-execution and manipulate it.
+{\ttfamily PTRACE\_POKETEXT}. The instructions {\ttfamily PTRACE\_CONT} and {\ttfamily wait/waitpid} are used for the
+next {\ttfamily SIGTRAP}. The instructions {\ttfamily PTRACE\_GETREG} and {\ttfamily PTRACE\_SETREG} are used to inspect the
+program execution and manipulate it.
 
 \paragraph{Code Coveerage}
 Unfortunately the use of tracing techniques might not be suitable when exploring binaries with large portions of code

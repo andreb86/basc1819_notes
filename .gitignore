@@ -1,4 +1,7 @@
 *.aux
+*.acr
+*.acn
+*.alg
 *.log
 *.glo
 *.glsdefs
@@ -6,3 +9,5 @@
 *.toc
 *.gz
 *.pdf
+*.glg
+*.gls
