@@ -72,10 +72,10 @@ instruction at compile time will cause the program to use the {\ttfamily .plt.go
 the conventional {\ttfamily .plt} (16 bytes entries) and place all of the GOT entries into the read only {\ttfamily
 .got} section.
 Lazy binding is done by means of the PLT ({\ttfamily .plt} section) and the GOT ({\ttfamily .got} and {\ttfamily
-.got.plt} sections); this avoids wasting time on needless relocations unless they are needed. Contains executable
-instructions like {\ttfamily .text} while the {\ttfamily .got}/{\ttfamily .got.plt} are data sections. The instructions
-contained in the {\ttfamily .plt} are stubs dedicated to the redirection of the call to correct library function. The
-format of the PLT is as follows:
+.got.plt} sections); this avoids wasting time on needless relocations unless they are needed. The PLT contains executable
+instructions and is indeed part of the {\ttfamily .text} segment while the {\ttfamily .got}/{\ttfamily .got.plt} are
+data sections. The instructions contained in the {\ttfamily .plt} are stubs dedicated to the redirection of the call to
+correct library function. The format of the PLT is as follows:
 \begin{enumerate}
     \item Default Stub (the resolver);
     \item Function Stubs;
@@ -90,5 +90,21 @@ dynamic resolution of library functions happens in 5 steps:
     \item The following instruction jumps to the default stub which is shared among all of the PLT stubs. The default
         stub pushes the identifier, taken from the GOT, of the executable itself;
     \item The linker pushes the address fo the library function into the GOT at the corresponding entry (identified at
-        step \ref{stubid}).
+        step \ref{stubid});
+    \item At the next function call the stub will induce the control flow to the updated GOT entry and no additional
+        steps will be required.
 \end{enumerate}
+In other words the dynamic linker figures out the address resolution on behalf of the executable loaded into the process
+by means of the PLT stubs; the linker looks up for the address at which the external symbols are located and plugs that
+into the GOT so that it now points to their actual address instead of the PLT default stub (the resolver). Any
+subsequent call will already have the correct address of the called function.
+The role of the GOT is of paramount importance; resolving the function call by simply plugging its address into the PLT
+is unsuitable for two main reasons:
+\begin{itemize}
+    \item It would require the {\ttfamily .text} and {\ttfamily .plt} to be writable and that would be too easy an
+        attack for a melicious agent. The extra layer of indirection avoids the creation of writable code sections;
+    \item Modern systems save physical memory by sharing library code among all processes. This happens because
+        libraries gets loaded only once, but they are mapped to a different virtual addresses for each process. Patching
+        the address into the code section would work for a single process but would break the others.
+\end{itemize}
+
