@@ -21,17 +21,19 @@ The first step is to identify the file and its nature. This can be done by means
     \item {\ttfamily objdump} dumps the content of a binary and allows for the interpretation of file headers, sections
         and instructions (if dealing with an ELF);
     \item {\ttfamily strings} prints out all of the strings of a binary;
-    \item {\ttfamily readelf} provides a handy tool to navigate and explore an ELF.
+    \item {\ttfamily readelf} provides a handy tool to navigate and explore an ELF;
+    \item {\ttfamily nm} helps to read symbols and demangle function names.
 \end{enumerate}
 
 
 \subsection{Dependencies, Function and System Calls}
 After identifying the file it is important to understand what kind of dependencies the program has and which functions
 are invoked in execution; most of the existing tools will track the program execution in order to provide the
-information required. Some of the tools used to this aim are:
+information required \footnote{When analysing malware or untrusted code avoid running code in the base system and always
+try to use sandboxed environments}. Some of the tools used to this aim are:
 \begin{enumerate}
     \item {\ttfamily ldd} which examinates the dependencies of an ELF file (if a dependency is resolved and satisfied
-        the program will print the location of the shared object file and its memory mapping or "{\ttfamily not found})"
+        the program will print the location of the shared object file and its memory mapping or "{\ttfamily not found}"
         otherwise);
     \item {\ttfamily ltrace} runs the program and intercepts dynamic library calls and signals received by the process;
     \item {\ttfamily strace} runs the program and intercepts system calls and signals received by the process;
@@ -128,6 +130,16 @@ used to save the content of address $\alpha$ and the instruction is here replace
 next {\ttfamily SIGTRAP}. The instructions {\ttfamily PTRACE\_GETREG} and {\ttfamily PTRACE\_SETREG} are used to
 inspect the program execution and manipulate it.
 
+\paragraph{DWARF}
+The DWARF is a debugging standard that establishes a default format for data representation: the Debugging Information
+Entry (DIE). Each DIE has a tag and different attributes. A DIE can have others nested for children and refer to other
+DIEs in tree fashion. The format uses two tables:
+\begin{itemize}
+    \item Line Number Table mapping code locations to source code lines and specifies which instructions are part of the
+        prologue of a function ({\ttfamily .debug\_line});
+    \item Call Frame Information Table allows debuggers to locate frames on the call stack.
+\end{itemize}
+
 \subsubsection{Code Coverage}
 Unfortunately the use of tracing techniques might not be suitable when exploring binaries with large portions of code
 seldomly executed.
@@ -137,5 +149,82 @@ In order to improve code coverage additional techniques might be used such as:
     \item Fuzzing (generation/mutation based fuzzers);
     \item Symbolic Execution.
 \end{itemize}
+All of the above mentioned techniques will be described separately within the present document.
 
+
+
+\section{Analysing Control and Data Flows}
+When code is disassembled it might be in such a form that makes it really difficult to be managed, especially when
+dealing with stripped binaries. Modern disassemblers will try to:
+\begin{itemize}
+    \item \textit{Compartmentalise} the code into basic blocks - i.e. chunks of code containing jumps or return
+        instructions only at the end - logically connected to each other;
+    \item \textit{Reveal Control Flow} by tracking control transfer between code block
+\end{itemize}
+
+
+\subsection{Functions Detection}
+Functions are the basic blocks used by high level languages to group a sequence of logically connected instructions;
+their detection makes binary code a lot easier to handle and understand. For binaries compiled with their symbolic
+information this is very trivial to do as the symbol table ({\ttfamily SYMTAB}) specifies the set of functions along
+with their names. For stripped and optimised binaries this is way harder; the source level information are meaningless
+as pieces of code might be scattered throughout the code section or even shared (overlapping code blocks). The
+predominant strategy for function detection is the use of \textit{function signature} which are code patterns typically
+found at the beginning and the end of functions. Signature based detection normally starts by locating the code
+addressed by a {\ttfamily call} instruction; this technique is sufficiently accurate, and allows function detection also
+in presence of indirect or tail \footnote{A tail call happens when a function terminates with a call to another
+function; normally the compiler optimises tail calls by removing the ret instruction and using a jump} calls. This
+because function signature databases normally contains instruction patterns for well known prologues and epilogues.
+Another techniques that could help in circumventing the function detection problem entirely relies on the
+{\ttfamily .eh\_frame} section which contains DWARF based debugging features. This technique requires stack unwinding.
+
+\subsubsection{Stack Unwinding}
+The {\ttfamily .eh\_frame} is basically a large table that, for each machine instruction, specifies how to compute where
+the return address and the callee saved registers are stored. The rows correspond to machine instructions while the
+columns represent the registers and the return address. Each cell of the table holds a rule detailing how the contents
+of the register or the return address will be restored for the previous stack frame. These can be complex expressions,
+but are normally expressed in terms of registers, constants and the Canonical Frame Address ({\ttfamily CFA} an
+invariant of the execution that normally corresponds to the value in {\ttfamily rsp} before the function call. Each row
+of the table must cover a range of instructions from its address to the one of the row below and if constructed in its
+entirety would be unmanageable and larger than the progrsm itself; the DWARF standard obviates to the problem by
+encodyng the table by using a compact bytecode that is only executed on demand to build the unwind table. The bytecode
+defines the rows of the table by expressing the offset with the previous line; this means that all of the table can be
+represented in a compact way, but in order to reach a certain location within it must run all of the bytecode
+instructions (which might render the entire unwinding process painfully slow).
+
+\subsubsection{Object Oriented Code}
+Executables developed in object oriented languages, like C++, present additional hurdles to reverse engineers; in fact
+exception handling and inheritance increment code complexity to a level where code is substantially more difficult to
+understand. In particular, the latter is implemented by means of a specific data structure called \textit{vtable} which
+is used by classes' function pointers (\textit{vptr}) to determine which function must be called in case of overloading
+and inheritance.
+
+
+\subsection{Control-Flow Graph}
+A control flow graph provides a convenient representation of the code of a binary; instructions enclosed within
+branching instructions (\textit{jump} and \textit{call}) represent a basic block which is defined as a set of
+instructions with a single entry point at the beginning and one exit point at the end. Basic blocks are the nodes of the
+CFG and are connected each other by branching edges; when branch edges jump back to a code block previously explored
+there is a potential loop. The CFG is normally built for a single function and therefore call branches are not included
+as they point towards code that is outside of the function itself. Figure \ref{CFG} shows an example of CFG.
+
+\begin{figure}[!htbp]
+    \begin{center}
+        \includegraphics{./pics/CFG.png}
+        \caption{Control-Flow Graph}
+        \label{CFG}
+    \end{center}
+\end{figure}
+
+
+\subsection{Call Graph}
+A call graph represents relationships between functions; each functions is a node and each call is a link (recursive
+calls are represented by a loop). A static call graph represents a graph of all of the possible execution call paths,
+while a dynamic call graph is built at runtime by a profiler. Building a static call graph is an overapproximation
+because:
+\begin{itemize}
+    \item when function pointers or virtual methods are invoked, a combination of dataflow and data type analysis could
+        limit the set of potential targets;
+    \item if a program loads code dynamically there might be a problem of code coverage.
+\end{itemize}
 
