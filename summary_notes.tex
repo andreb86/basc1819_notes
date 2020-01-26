@@ -5,6 +5,7 @@
 \usepackage[T1]{fontenc} % Use 8-bit encoding that has 256 glyphs
 \usepackage{fourier} % Use the Adobe Utopia font for the document - comment 
 %this line to return to the LaTeX default
+\usepackage{bookmark}
 \usepackage[english]{babel} % English language/hyphenation
 \usepackage{amsmath,amsfonts,amsthm} % Math packages
 \usepackage{graphicx}
@@ -162,6 +163,10 @@ at runtime}}
 \newacronym{CoW}{CoW}{Copy on Write}
 \newacronym{LTO}{LTO}{Link-Time Optimisation}
 \newacronym{DIE}{DIE}{Debug Information Entry}
+\newacronym{IR}{IR}{Intermediate Representation}
+\newacronym{CFG}{CFG}{Control Flow Graph}
+\newacronym{SBI}{SBI}{Static Binary Instrumentation}
+\newacronym{DBI}{DBI}{Dynamic Binary Instrumentation}
 %-------------------------------------------------------------------------------
 %	TITLE SECTION
 %-------------------------------------------------------------------------------
@@ -192,6 +197,7 @@ at runtime}}
 \include{ch01_intro}
 \include{ch02_compilation_and_linking}
 \include{ch03_binary_analysis}
+\include{ch04_instrumentation}
 \glsaddall
 \printglossary[type=\acronymtype]
 \end{document}

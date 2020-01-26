@@ -18,114 +18,6 @@ It can present several challenges as:
     \item Code and data are mixed together; 
     \item Impossible to remove/add instructions without "bricking" the program. 
 \end{itemize} 
-\section{Execution} 
-Unless one is programming the bare metal, programs are generally executed on an Operating System (OS hereafter) which 
-is an \textbf{abstract machine}.  A running profram is a process, which has its own resources and can use a subset of 
-the ISA (implemented on the actual CPU or emulates), an abstract model of a CPU and the API of the OS (e.g. syscall).
-\subsection{Emulation, Virtualisation, Containers}
-As computers became more accessible to people the idea of simply time sharing the machine became unfeasible; system had
-to be made reduntant and fault tolerant whilst being able to be shared across the entire userbase. Having multiple
-systems is beneficial for:
-\begin{itemize} 
-    \item \textbf{Isolation} Systems must be isolated for stability reasons in such a way that programs do not interfere
-        with each other for stability (i.e. buggy programs shall not cause disruption to other processes);
-    \item  \textbf{Performance} Placing an application on it's own system allows it to have exclusive access to the
-        system's resources. User level segregation does not effectively isolate applications as scheduling priority,
-        memory demand, network and FS I/O can generate interference between programs.  
-\end{itemize} 
-However having multiple systems is not always the most fruitful and effective solution and in the 60's IBM started
-working on the first \textit{virtual machines} where it was crucial to be able to time-share expensive main frames.
-A VM is a fully isolated copy of the underlying hardware that enable applications to run as they were on "bare metal".
-\subsubsection{Virtual Machine Monitor}
-The VMM is the software component that hosts the virtual machines; the VMM is
-generally called \textit{host} and the VM's are called \textit{guests}.  It's duties are, among the others, the
-provision of virtulised CPU, virtualised resources such as I/O devices, storage, memory and isolation between VM's.
-\subsubsection{Internet Services Virtualisation} In order to face the ever more demanding Internet applications a new
-kind of system was adopted: the multi-tier system architecture. THis common way of building Internet applications
-entails the separation of the web and database server and easily enables load-balancing and clustering. The system has 
-the advantage of being easier to manage and extremely fault tolerant, but this requires the additional cost of additional 
-hardware purchases and management.
-In this scenario the system virtualisation provides the advantages of componitisation without the need for additional 
-hardware (and exacerbated by Zipf's law\footnote{The frequency of an event is proportional to $x^{-\alpha}$ where $x$ 
-is the rank of the event in comparison to other events}). Studies have found that the internet services behave according
-to a Zipfian distribution, i.e. if we observe the web caches we see that only a few web services are always active and 
-used the most of the others just lay dormant; thus isolation is no longer a worthy option unless services are
-consolidated to a single machine and virtualisation provides the best benefit for the cost as it avoids the waste of
-computing power and reduces the maintenance costs.
-\subsubsection{Requirements for VM's} 
-In 1974 Popek and Goldberg defined what they believed where the formal requirements for a virtualisable computer
-architecture: \textit{"For any computer a virtual machine monitor can be constructed if the set of instructions is a
-subset of the privileged instructions"}; the most essential requirement a computer architecture must have in order to
-be virtualisable is that privileged instructions must launch a trap and render control to the VMM so it can decide
-whether the instruction can be executed or not. The three essential characteristics of VM's are:
-\begin{enumerate}
-    \item Any program run under the VMM should exhibit an effect identical with that demonstrated if the program had
-        run on the original machine (with the exception of the timing effects related to the virtualisation overhead);
-    \item A statistically dominant subset of the virtual processor's instructions are directly executed by the real
-        processor - i.e. the virtual machine occasionally relinquishes the real processor to the virtual processor; 
-    \item The VMM is in complete control of system resources and the virtual machine does not have direct access to the
-        system's real resources.
-\end{enumerate}
-\subsection{Full System Virtualisation}
-Full sytem virtualisation provides avirtual replica of the system's hardware so that the OS's and software may run on
-the VM exactly as it would on "bare metal".
-\subsubsection{370-XA Virtualisation}
-The VM/370 is a VMM that was first delivered in the VMF/370 and ran the 370-XA, an architecture designed to maximise 
-the virtualisation performance. The platform provided \textit{"assists"} in the architecture to boost the
-virtualisation performance of certain repetitive operations. The VMM had to simulate the instruction beforehand to 
-ensure safety; the assist development allowed the execution of the simulated instructions on the hardware. Other 
-assists supplanted the frequently executed instructions that still required VMM intervention and were enabled by
-setting them in \textit{interpretive execution} mode. Assists included VMA, ECPS, STB and many others (IBM developed
-more than 100 in total).
-\subsubsection{IA-32} 
-It was the most dominating architecture (now supplanted by x64) but it was never meant to be virtualised although that
-would have had enormous benefits; the reason behind this resides in the fact that there is a limited subset of
-instructions that does not need higher privilege to be run and cripple a machine. This is not a problem in systems 
-with single OS, but it becomes difficult to manage when multiple OS's are running at once. Furthermore the huge amount 
-of different devices and drivers for the IA-32 made virtualisation a big deal. However IA-32 has been finally
-virtualised according to the following:
-\begin{enumerate} 
-    \item Non-sensitive,
-        non-privileged instructions may be run directly on the processor;
-    \item Sensitive, Privileged instructions trap - i.e. the processor sends an interrupt and the VMM instercepts it 
-        for proper management of the instruction
-    \item Sensitive, but not privileged instructions are detected and the VMM ensures they never get executed as they 
-        cannot be handled with a trap.
-\end{enumerate}
-\subsubsection{IA-64} 
-It presents more or less the same drawbacks of the
-IA-32, but it provides an important feature as it allows to run VM's in a higher ring of the VMM and traps from the
-higher rings can be intercepted by lower rings.
-\subsubsection{Drawbacks of full system virtualisation} 
-The advantage of full system virtualisation is that OS's and programs can run unmodified and completely oblivious of the
-environment in which they are actually running. However there are drawbacks related to the fact that IA-32 and IA-64
-were not created to be virtualised and thus a lot of effort must be put into efficiently virtualising hardware and
-memory management. When an application demands for a memory page the system translates the virtual address to a
-physiscal one thanks to page table. Unused pages can be written to disk when inactive or when more memory is required.
-The VMM must intercept all of the memory calls and translate VM space into the system's real space using another pag table,
-retrieve the memory and return it to the VM.
-\subsection{Paravirtualisation}
-Paravirtualisation tries to mitigate the performance hit by modifying the OS so that tasks are performed by the VMM
-directly and not by the CPU. There are several commecrcial and open solutions that can efficiently carry out
-paravirtualisation like:
-\begin{itemize} 
-    \item Xen Project;
-    \item Citrix Xen Server;
-    \item Denali;
-    \item VMWare Sphere;
-\end{itemize} 
-The VMM provides the VM's with a software interface that is similar yet not entirely identical to the underlying
-hardware. Paravirtualisation provides specifically defined hooks by which it tries to minimise the number of
-operations that must be carried out in the virtual environment. The guest OS shall be modified for the
-paravirtualisation API, although this requirement is less strict nowadays as more and more paravirtualsation
-enabled components can be found under the GPL and other free licenses.
-\subsection{Other virtualisation techniques}
-There are other virtualisation techniques like: 
-\begin{itemize} 
-    \item Emulation: replication of a specific architecture that enables a machine to behave like another;
-    \item Containerisation: OS-level virtualisation that allows for the presence of isolated user-space instances 
-        called containers.  
-\end{itemize} 
 \section{Binaries} 
 Executables are created in compliance with a specific ABI that depends on the architecture. The ABI establishes: 
 \begin{itemize} 
@@ -726,4 +618,115 @@ also show significant differences in function calls.
 In particular the first six arguments of a function are passed inside the registers ({\ttfamily RDI}, {\ttfamily RSI},
 {\ttfamily RDX}, {\ttfamily RCX}, {\ttfamily R8} and {\ttfamily R9}) while the rest is pushed onto the stack. The return
 value may be contained in {\ttfamily RAX} as well as {\ttfamily RDX} based on the type. {\ttfamily RBP}, {\ttfamily
-RBX}, {\ttfamily R12-15} and {\ttfamily RSP} must be preserved for the caller. 
+RBX}, {\ttfamily R12-15} and {\ttfamily RSP} must be preserved for the caller.
+
+
+
+\section{Virtualisation} 
+Unless one is programming the bare metal, programs are generally executed on an Operating System (OS hereafter) which 
+is an \textbf{abstract machine}.  A running profram is a process, which has its own resources and can use a subset of 
+the ISA (implemented on the actual CPU or emulates), an abstract model of a CPU and the API of the OS (e.g. syscall).
+\subsection{Emulation, Virtualisation, Containers}
+As computers became more accessible to people the idea of simply time sharing the machine became unfeasible; system had
+to be made reduntant and fault tolerant whilst being able to be shared across the entire userbase. Having multiple
+systems is beneficial for:
+\begin{itemize} 
+    \item \textbf{Isolation} Systems must be isolated for stability reasons in such a way that programs do not interfere
+        with each other for stability (i.e. buggy programs shall not cause disruption to other processes);
+    \item  \textbf{Performance} Placing an application on it's own system allows it to have exclusive access to the
+        system's resources. User level segregation does not effectively isolate applications as scheduling priority,
+        memory demand, network and FS I/O can generate interference between programs.  
+\end{itemize} 
+However having multiple systems is not always the most fruitful and effective solution and in the 60's IBM started
+working on the first \textit{virtual machines} where it was crucial to be able to time-share expensive main frames.
+A VM is a fully isolated copy of the underlying hardware that enable applications to run as they were on "bare metal".
+\subsubsection{Virtual Machine Monitor}
+The VMM is the software component that hosts the virtual machines; the VMM is
+generally called \textit{host} and the VM's are called \textit{guests}.  It's duties are, among the others, the
+provision of virtulised CPU, virtualised resources such as I/O devices, storage, memory and isolation between VM's.
+\subsubsection{Internet Services Virtualisation} In order to face the ever more demanding Internet applications a new
+kind of system was adopted: the multi-tier system architecture. THis common way of building Internet applications
+entails the separation of the web and database server and easily enables load-balancing and clustering. The system has 
+the advantage of being easier to manage and extremely fault tolerant, but this requires the additional cost of additional 
+hardware purchases and management.
+In this scenario the system virtualisation provides the advantages of componitisation without the need for additional 
+hardware (and exacerbated by Zipf's law\footnote{The frequency of an event is proportional to $x^{-\alpha}$ where $x$ 
+is the rank of the event in comparison to other events}). Studies have found that the internet services behave according
+to a Zipfian distribution, i.e. if we observe the web caches we see that only a few web services are always active and 
+used the most of the others just lay dormant; thus isolation is no longer a worthy option unless services are
+consolidated to a single machine and virtualisation provides the best benefit for the cost as it avoids the waste of
+computing power and reduces the maintenance costs.
+\subsubsection{Requirements for VM's} 
+In 1974 Popek and Goldberg defined what they believed where the formal requirements for a virtualisable computer
+architecture: \textit{"For any computer a virtual machine monitor can be constructed if the set of instructions is a
+subset of the privileged instructions"}; the most essential requirement a computer architecture must have in order to
+be virtualisable is that privileged instructions must launch a trap and render control to the VMM so it can decide
+whether the instruction can be executed or not. The three essential characteristics of VM's are:
+\begin{enumerate}
+    \item Any program run under the VMM should exhibit an effect identical with that demonstrated if the program had
+        run on the original machine (with the exception of the timing effects related to the virtualisation overhead);
+    \item A statistically dominant subset of the virtual processor's instructions are directly executed by the real
+        processor - i.e. the virtual machine occasionally relinquishes the real processor to the virtual processor; 
+    \item The VMM is in complete control of system resources and the virtual machine does not have direct access to the
+        system's real resources.
+\end{enumerate}
+\subsection{Full System Virtualisation}
+Full sytem virtualisation provides avirtual replica of the system's hardware so that the OS's and software may run on
+the VM exactly as it would on "bare metal".
+\subsubsection{370-XA Virtualisation}
+The VM/370 is a VMM that was first delivered in the VMF/370 and ran the 370-XA, an architecture designed to maximise 
+the virtualisation performance. The platform provided \textit{"assists"} in the architecture to boost the
+virtualisation performance of certain repetitive operations. The VMM had to simulate the instruction beforehand to 
+ensure safety; the assist development allowed the execution of the simulated instructions on the hardware. Other 
+assists supplanted the frequently executed instructions that still required VMM intervention and were enabled by
+setting them in \textit{interpretive execution} mode. Assists included VMA, ECPS, STB and many others (IBM developed
+more than 100 in total).
+\subsubsection{IA-32} 
+It was the most dominating architecture (now supplanted by x64) but it was never meant to be virtualised although that
+would have had enormous benefits; the reason behind this resides in the fact that there is a limited subset of
+instructions that does not need higher privilege to be run and cripple a machine. This is not a problem in systems 
+with single OS, but it becomes difficult to manage when multiple OS's are running at once. Furthermore the huge amount 
+of different devices and drivers for the IA-32 made virtualisation a big deal. However IA-32 has been finally
+virtualised according to the following:
+\begin{enumerate} 
+    \item Non-sensitive,
+        non-privileged instructions may be run directly on the processor;
+    \item Sensitive, Privileged instructions trap - i.e. the processor sends an interrupt and the VMM instercepts it 
+        for proper management of the instruction
+    \item Sensitive, but not privileged instructions are detected and the VMM ensures they never get executed as they 
+        cannot be handled with a trap.
+\end{enumerate}
+\subsubsection{IA-64} 
+It presents more or less the same drawbacks of the
+IA-32, but it provides an important feature as it allows to run VM's in a higher ring of the VMM and traps from the
+higher rings can be intercepted by lower rings.
+\subsubsection{Drawbacks of full system virtualisation} 
+The advantage of full system virtualisation is that OS's and programs can run unmodified and completely oblivious of the
+environment in which they are actually running. However there are drawbacks related to the fact that IA-32 and IA-64
+were not created to be virtualised and thus a lot of effort must be put into efficiently virtualising hardware and
+memory management. When an application demands for a memory page the system translates the virtual address to a
+physiscal one thanks to page table. Unused pages can be written to disk when inactive or when more memory is required.
+The VMM must intercept all of the memory calls and translate VM space into the system's real space using another pag table,
+retrieve the memory and return it to the VM.
+\subsection{Paravirtualisation}
+Paravirtualisation tries to mitigate the performance hit by modifying the OS so that tasks are performed by the VMM
+directly and not by the CPU. There are several commecrcial and open solutions that can efficiently carry out
+paravirtualisation like:
+\begin{itemize} 
+    \item Xen Project;
+    \item Citrix Xen Server;
+    \item Denali;
+    \item VMWare Sphere;
+\end{itemize} 
+The VMM provides the VM's with a software interface that is similar yet not entirely identical to the underlying
+hardware. Paravirtualisation provides specifically defined hooks by which it tries to minimise the number of
+operations that must be carried out in the virtual environment. The guest OS shall be modified for the
+paravirtualisation API, although this requirement is less strict nowadays as more and more paravirtualsation
+enabled components can be found under the GPL and other free licenses.
+\subsection{Other virtualisation techniques}
+There are other virtualisation techniques like: 
+\begin{itemize} 
+    \item Emulation: replication of a specific architecture that enables a machine to behave like another;
+    \item Containerisation: OS-level virtualisation that allows for the presence of isolated user-space instances 
+        called containers.  
+\end{itemize} 

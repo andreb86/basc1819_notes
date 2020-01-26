@@ -177,6 +177,9 @@ function; normally the compiler optimises tail calls by removing the ret instruc
 because function signature databases normally contains instruction patterns for well known prologues and epilogues.
 Another techniques that could help in circumventing the function detection problem entirely relies on the
 {\ttfamily .eh\_frame} section which contains DWARF based debugging features. This technique requires stack unwinding.
+Non-inlined functions are somewhat easier; in fact dynamically linked code can only be resolved by maintaining the
+symbols, while statically linked code can be identified by comparing the analysed code with knwon functions from widely
+used libraries - e.g. \textit{libc}.
 
 \subsubsection{Stack Unwinding}
 The {\ttfamily .eh\_frame} is basically a large table that, for each machine instruction, specifies how to compute where
@@ -197,7 +200,8 @@ Executables developed in object oriented languages, like C++, present additional
 exception handling and inheritance increment code complexity to a level where code is substantially more difficult to
 understand. In particular, the latter is implemented by means of a specific data structure called \textit{vtable} which
 is used by classes' function pointers (\textit{vptr}) to determine which function must be called in case of overloading
-and inheritance.
+and inheritance. In many cases the use of automated tools does not capture this type of constructs and human
+intervention is needed; modern disassemblers and decompilers only trat the code as procedural.
 
 
 \subsection{Control-Flow Graph}
@@ -223,8 +227,133 @@ calls are represented by a loop). A static call graph represents a graph of all 
 while a dynamic call graph is built at runtime by a profiler. Building a static call graph is an overapproximation
 because:
 \begin{itemize}
+    \item indirect calls are nornally omitted as it is not feasible to understand which function miight be called from
+        and indirect call site;
     \item when function pointers or virtual methods are invoked, a combination of dataflow and data type analysis could
         limit the set of potential targets;
     \item if a program loads code dynamically there might be a problem of code coverage.
 \end{itemize}
+
+\begin{figure}
+    \begin{center}
+        \includegraphics{./pics/call_graph.png}
+        \caption{Call Graph}
+        \label{call_graph}
+    \end{center}
+\end{figure}
+
+
+\subsection{Data Types and Structures}
+Normally reverse engineering tools can infer the data types by recognising the function signatures; in particular this
+works out really well when dealing with library functions. In fact their input, output and inner workings are very much
+well known. Things are a lot more difficult when dealing with structures and classes; in these cases manual analysis is
+pretty much unavoidable.
+
+
+\subsection{Decompilation}
+Decompilation is the operation of reconstructing C-like pseudocode from binary instructions; it is an error prone
+process and it cannot be left to automatic analysis tools. The result of decompilation will almost surely be very far
+from reality and will not surely recomplile into the original binary. As of today the most reliable decompiler avialable
+is Hex-Rays (part of IDA pro), but other paid and free solution - e.g. binary ninja, retdec, snowman, ghidra - are
+gaining traction.
+
+
+\subsection{Intermediate Representations}
+The existance of several instruction sets, along with the sheer number of instructions and relevant side effects,m
+increases complexity of automated binary analysis. In order to ease this burden Intermediate Languages, also called
+Intermediate Reperesentations. An IR is a simple language that provides a common abstraction independent on
+architecture; known IRs are REIL, VEX, LLVM IR. The purpose is to have a much simpler semantic and avoid instruction
+side effects. Translating code from assembly to IR is called lifting; once done it can render the adoption and execution
+of other analysis techniques much simpler. But there is a catch; in order to maintain this kind of abstraction IR are
+generally less concise than machine instructions due to the limited syntax.
+
+
+
+\section{Analysis Properties}
+
+
+\subsection{Interprocedural and Intraprocedural Analysis}
+The reason for identifying functions is related to the fact that analysing a program in its entirety is not feasible at
+all; this is because every time the control flow encounters a jump the control flow branches out. The number of
+execution paths grows exponentially and is really difficult to handle; this is why the majority of analytical
+techniques are intraprocedural - i.e. they investigate the CFG of a single function at a time. On the contrary
+interprocedural analysis will consider the program as a whole by linking the different CFG of each function by means of
+the call graph. The combination of the two approaches allows for a massive reduction in the number of execution paths
+that must be analysed and is actually the best approach to binary analysis as one can help mitigate the pitfalls and
+shortcomings of the other.
+
+
+\subsection{Flow Sensitivity}
+Flow sensitivity is a property of binary analyses that specifies whether the analysis accounts for the execution order
+of the instructions. An insensitive analysis would be able to provide indications on the value of a certain variable at
+the end of a code block, but not its value at any given intermediate step; for that flow sensitive analysis is needed.
+Obviously flow sensitive analysis can provide more precise results for a greater computational cost.
+
+
+\subsection{Context Sensitivity}
+Context sensitivity indicates whether the analysis accounts for the call order of functions and is a property that is
+meaningful only for interprocedural analyses; a context insensitive analysis computes a single global result at the end
+of the execution while a context sensitive analysis computes all of the possible results while traversing the call
+graph. The context is, by definition, the state accrued during the traversal and is denoted by the list of all of the
+previously encountered functions <$f_1, f_2, ..., f_n$>. As for flow sensitivity context sensitive analysis can yield
+more accuracy, but with greater complexity.
+
+
+
+\section{Analysis Methods}
+
+
+\subsection{Control Flow Analysis}
+As the name suggests the purpose is to identify the main properties of the control flow - i.e. identify loops, cycles,
+conditionals, calls, etc.
+
+\subsubsection{Loops and Cycles}
+At the binary level the identification of {\ttfamily while} or {\ttfamily for} loops is a little tricky as it uses jumps
+very much like {\ttfamily if/else} constructs. Loops are insteresting from a security perspective as usually they might
+be an opening for exploitation - e.g. buffer overflow. Natural loops can be easily spotted if we look at the CFG and
+dominance tree of a function; natural loops are indeed back edges going from one code block to its dominant \footnote{A
+code block is said to be dominated by another if the latter represents the only possible way to reach said block}.
+
+\begin{figure}
+    \begin{center}
+        \includegraphics{./pics/natural_loop.png}
+        \caption{Natural Loops}
+    \end{center}
+\end{figure}
+
+Cycles are another typical flow construct that can be encountered in binaries; these happen when the back edge connects
+two blocks, thus closing a circle, which are not bound by a dominance relationship.
+
+
+
+\subsection{Data Flow Analysis}
+
+\subsubsection{Reaching Definitions Analysis}
+The reaching definitions analysis establish which variables, registers or memory locations, can reach a certain point in
+the control flow without being overwritten or modified. The first step is to analyse which definitions are generated by
+a basic block and which are killed instead; this generates local solutions for every analysed block. Globally the set of
+definitions that can reach a certain block is obtained by the union of all of the definitions that leave unscathed the
+blocks preceding the one under analysis; this can be represented logically as follows:
+
+\begin{equation}
+    in[B] = \bigcup_{p \in pred[B]} out[p]
+\end{equation}
+
+Intuitively the definitions leaving a certaing block are those that are generated by the block itself or those that,
+after entering it, can leave it without being killed.
+
+\subsubsection{Use-Def Chains}
+Use-Def chains are used to understand at each point of the program where the variable has been used and where it might
+have been defined; it is important to understand that this kind of analysis is deeply linked to the Reaching Definitions
+Analysis as it represents its basic foundation. The Use-Def chains are particularly important for decompilers as it
+helps to track the usage of memory locations/registers into jumps. It also plays a key role in compiler optimisation in
+the process of constant priopagation which replace a variable with a constant if that's the only possible value at a
+certain point in the control flow.
+
+\subsubsection{Slicing}
+Slicing is the operation of extracting the instructions that contribute to the value of a certain variable or set of
+variables at a certain point of a program. This technique is especially important for debuggers when you want to
+understand which instruction might have led to a certain bug or to a certain program state when reversing the binary.
+Slicing is still very much object of research and only a few framework - e.g. angr\footnote{https://angr.io/ \newline
+https://github.com/angr/angr} -  provide this capability.
 
