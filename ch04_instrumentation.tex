@@ -67,4 +67,22 @@ the beginning of the instrumentation and restore it at the end.
 
 \subsubsection{Indirect Control Flow}
 Since indirect control flow target instructions at dynamically computed addresses they cannot be computed by the SBI;
-this is managed by transferring control to the original code and using trampolines here located.
+this is managed by transferring control to the original code and using trampolines duly inserted in it. 
+\paragraph{Indirect Calls} The SBI code does not alter the code that computes the addresses of indirect calls so that
+indirect calls maintain the same functions as targets; these contain trampolines which hand the control over to
+instrumented code.
+\paragraph{Indirect Jumps} The situation is more complicated for indirect jumps; for example {\ttfamily switch}
+statements are implemented through \textit{jump tables} containing all of the possible addresses of relevant {\ttfamily
+case}s. The indirect jump from one address to the other via the table lands in the original code; due to unexhaustive
+basic symbolic information it is really difficult to patch the cases as there is no easy way to understand where the
+trampolines are to be placed and there is also the underlying risk of corrupting them should there be not enough space
+between one another. Patching the jump table is equally risky as it would be possible to change data that happens to be
+a valid address instead.
+\paragraph{Position-Indipendent Code} The analysis of PIE code requires special support as they might read the program
+counter with instrumented code - i.e. with mutated references - and use it for address computations. In order to
+overcome this pitfall SBI instruments the instruction reading the \reg{rip} as to let them return the result that they
+would have in the original code.
+
+
+
+\section{Dynamic Binary Instrumentation}
