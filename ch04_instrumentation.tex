@@ -73,7 +73,7 @@ indirect calls maintain the same functions as targets; these contain trampolines
 instrumented code.
 \paragraph{Indirect Jumps} The situation is more complicated for indirect jumps; for example {\ttfamily switch}
 statements are implemented through \textit{jump tables} containing all of the possible addresses of relevant {\ttfamily
-case}s. The indirect jump from one address to the other via the table lands in the original code; due to unexhaustive
+case}'s. The indirect jump from one address to the other via the table lands in the original code; due to unexhaustive
 basic symbolic information it is really difficult to patch the cases as there is no easy way to understand where the
 trampolines are to be placed and there is also the underlying risk of corrupting them should there be not enough space
 between one another. Patching the jump table is equally risky as it would be possible to change data that happens to be
@@ -86,3 +86,154 @@ would have in the original code.
 
 
 \section{Dynamic Binary Instrumentation}
+DBI monitors processes as they execute and instruments the instruction stream; no binary rewriting is needed and
+therefore the technique is far less error prone. The DBI engines normally expose an API that allows for the selective
+instrumentation of code. Before starting or attaching to the main application the DBI initialises itself by registering
+functions for instrumentation. After initialisation the DBI engine is ready to start the application. DBI tools never
+run processes directly, but run instruction in a code cache that contains the instrumented code. The code cache is
+initially empty and the instrumentation engine fetches a chink of code - not necessarily a single block - from the
+process and instruments it. After instrumentation the code is compiled with a JIT compiler and fed to the code cache for
+execution. Control flow instructions are rewritten as to render control to the instrumentation engine, thus avoiding
+control transfer to uninstrumented code. The JIT compiler does not translate the code into a different language, but
+from native machine code to native machine code; it is only used to instrument the code and compile it the first time it
+is executed. After that is cached and reused; the cached code is executed until there is a control flow instruction that
+requires fetching another code chunk or block. Tools like DynamoRIO and Pin reduce the overhead by rewriting also these
+control flow instructions and jumping directly to the next cached chunk; if this is not possible - i.e. indirect calls -
+the rewritten instructions return control to the DBI engine that fectches the next code chunk. The instrumented code can
+normally run natively, but some instructions need to be emulated - e.g. {\ttfamily syscalls} are handled in a particular
+way by Pin. The instrumented code contains callbacks to functions in the DBI tool that observe or modify the code's
+behaviour.
+\begin{figure}[bpth]
+    \begin{center}
+        \includegraphics[scale=0.7]{./pics/DBI.png}
+        \caption{DBI Architecture}
+        \label{DBI}
+    \end{center}
+\end{figure}
+
+
+
+\section{Hijacking the GOT/PLT}
+Another way to instrument the code in PIE executables is hijacking the call to dynamic library functions by infecting
+the GOT/PLT. The infection happens in two steps:
+\begin{itemize}
+    \item Hook injection;
+    \item Patch the {\ttfamily GOT} and hijack call to redirect control flow on to the hook.
+\end{itemize}
+The drawback of these techniques is that exdcutables must be {\ttfamily PIC/PIE} and not use standard external
+libraries. Figure \ref{LIEF} shows the inner workings of a cross platfrom tool called LIEF.
+
+\begin{figure}[!bpth]
+    \begin{center}
+        \includegraphics[scale=1.0]{./pics/lief.png}
+        \caption{Library to Instrument Executable Formats}
+        \label{LIEF}
+    \end{center}
+\end{figure}
+
+
+
+\section{Transparency}
+What explained so far introduced an important requirement for the development of instrumentation tools; these must avoid
+interference with the normal execution flow unless necessary - i.e. they must be "transparent". Transparent design and
+implementation of instrumentation tools has already been addressed in the previous chapters, but the concept will be
+explored specifically in the present section. Most of the binaries execute introspective operations such as reading
+registers and return addresses; if the instrumentation tools change the execution environment they might derail the
+control flow in unuexpected ways or crash the process. This sparked the definition of the so called \textit{Transparency
+Guidelines} which purpose is pushing developers to build efficient and successful instrumentation tools. These can be
+summarised in three main points:
+\begin{enumerate}
+    \item Leave the application unchanged whenever possible;
+    \item Changes shall be unperceivable from the application perspective;
+    \item Avoid resource conflicts by requiring them directly from the OS and if using libraries fully isolate them from
+        the application.
+\end{enumerate}
+These best practices translate in into specific requirements in the design and implementation of instrumentation tools.
+
+
+\subsection{Transparency in System Design}
+
+\subsubsection{Code Transparency}
+Code transparency refers to the faithful reproduction of application behaviour with respect to changes in/to
+references to its code when executing in an instrumentation/virtualisation system. This is normally achieved by using a
+code cache which in reality complicates the transparency issues, but allows for great flexibility, effectiveness and
+efficiency.
+\paragraph{Address Transparency} Address transparency refers to the fact that every address manipulated by the
+instrumentation must remain an original application address; thus indirect branch targets must be translated into cache
+address and viceversa when a cache address is exposed to the original application control flow. The latter happens when
+the OS passes the machine context or signal or exception handler; both the faulting or interrupted address must be made
+available, along with the register state, as if the signal or exception happened natively and not in the instrumented
+code.
+\paragraph{Code Cache Consistency} The instrumentation tool must ensure that the code in the cache is consistent with
+the original application code - e.g. unmapping a shared library from memory must result in flushing the cache of the
+code contained in the associated region. The original code might also use self modifying instructions or reuse of the
+memory region for dynamic code generation and in these cases the solution is to protect cache regions as read-only
+areas; if an attempt to write is made the region is flushed, made writable and the faulting write is executed. A
+complication with page protection occurs when an application requests output from a syscall at an address in the read
+only region; in this case a possible solution could be to look for all of the input parameters, if known, in the read
+only areas and swap those pages to use sandboxing.
+
+\subsubsection{Data Transparency}
+\paragraph{Application State Preservation} The execution of code in the cache is interleaved with instrumentation code;
+thus the application state - i.e. the registers, conditional flags, floating point state and library peristent states
+shared with the system - must be preserved when the execution exits the cache and restored when it enters the cache. The
+code is copied into the cache with the necessary minimal modifications and a full context switch is executed when there
+is a control transfer.
+\paragraph{Stack and Heap Transparency} Stack transparency can be achieved by using the private stack of the
+instrumentation tool and leaving the application stack unchanged. This is particularly good when one is instrumenting
+an application that investigates its own stack; avoiding modification to the original stack lowers the probability of
+crashes. The same principle can be applied to the heap by having memory allocated by the instrumentation tool separated
+from the one allocated by the application; normally memory allocation is thread-safe but non-reentrant (cannot execute
+concurrently mulitple calls to {\ttfamily malloc}), thus not safe to be called from the instrumentation tool and the use
+of custom memory manager could be a solution.
+\paragraph{Self Introspection Transparency} Many applications perform system calls to read the pseudo-fs {\ttfamily
+/proc} and read info relevant to the running process; in these cases the results of the syscalls must be intercepted and
+modified in order to hide the presence of the instrumentation tool.
+
+\subsubsection{Concurrency Transparency}
+\paragraph{Thread Transparency} Multithreaded application present their own set of challenges; using a separate system
+thread per application thread can be more transparent by truly separating contexts, TLS in particular, and avoiding to
+handle application threads suspending threads executing in system code. however this reduces scalability as it requires
+to actually double the number of threads with subsequent increase in load and synchronisation issues that might hinder
+performance; the opposite is likewise inpractical as it would cause bottlenecks related to multiplexing all of the
+application threads onto a single system thread.
+\paragraph{Synchronisation Transparency} Concurrency is challenging enough in a single execution flow and sharing locks
+with the application threads is deprecated; application threads cannot be allowed to suspend another thread that is in
+the middle of a non-reentrant function call or holding a lock. Deadlocks can occur between application and system
+threads - e.g. thread holding an application lock and waiting for the release of a system lock held by a thread waiting
+to acquire the application lock; in order to avoid this the instrumentation tool cannot hold a lock while a thread is
+executing application code within the cache.
+\paragraph{Memory Ordering Transparency} If an application is sensitive to the memory access or instruction ordering it
+might be negatively affected by the presence of instrumentation tools; thus changes in this particular case shall be
+limited. Additionally, reading another thread's memory could result in behaviour that differs from native execution due
+to timing effects.
+
+\subsubsection{Transparency in System Implementation}
+\paragraph{Library Transparency} Sharing libraries between the applicaton and the instrumentation can be cause of
+issues with reentrancy and compromise persistent state like error codes. Currently a potential solution is to load
+separate copies of application libraries so that these are not shared between instrumentation code and application.
+\paragraph{Syscall Transparency} Syscalls shall be duly handled as: 
+\begin{itemize}
+    \item It has to execute raw syscall itself to request resources;
+    \item Certain syscalls must be monitored as to enforce transparency by maintaining the system state.
+\end{itemize}
+User code is easily monitored, but since there is little control over code running in kernel mode the syscalls must
+intercept them and modify as needed - e.g. calls to {\ttfamily sigaction} or memory mapping/cache flushing shall be
+monitored in order to maintain the correct state of the system and modify the code cache accordingly.
+\paragraph{Context Translation} When handling exceptions and signals they must appear as they originated from native
+application code and not from the code cache; thus the instrumentation tools must translate the context. This is an
+expensive operation and several tools try to delay it; should this be not possible the operation will take several steps
+aiming at bringing the code cache context closer to the native state:
+\begin{enumerate}
+    \item The first step is translating the program counter from the code cache to its corresponding application
+        address. One translation method is to store a mapping table for each cache fragment whilst another one is to
+        re-create the cache fragment from application code and then correlate the code cache address to the recreated
+        cache fragment to obtain the appropriate application address;
+    \item Ensuring that the registers contain the proper values.
+\end{enumerate}
+\paragraph{Error Transparency} Application errors must occur as they would natively; when an error is passed to the
+application it must seem like it originated natively, thus requiring context translation and kernel emulation. An
+illegal instruction or a jump to illegal address shall be propagated back to the application; in order to do that
+exceptions must be suppressed and execution stopped before constructing the basic block in the cache.
+\paragraph{Debugging Transparency} A debugger should be able to attach itself to an instrumented process as it would
+natively.
